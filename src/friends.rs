@@ -142,6 +142,10 @@ impl<Manager> Friends<Manager> {
             )
         }
     }
+
+    pub fn clear_rich_presence(&self) {
+        unsafe { sys::SteamAPI_ISteamFriends_ClearRichPresence(self.friends) }
+    }
 }
 
 /// Information about a friend's current state in a game
