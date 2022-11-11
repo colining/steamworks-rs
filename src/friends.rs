@@ -131,16 +131,14 @@ impl<Manager> Friends<Manager> {
 
     /// Set rich presence for the user. Unsets the rich presence if `value` is None or empty.
     /// See [Steam API](https://partner.steamgames.com/doc/api/ISteamFriends#SetRichPresence)
-    pub fn set_rich_presence(&self, key: &str, value: Option<&str>) -> bool {
+    pub fn set_rich_presence(&self, key: &str, value: &str) -> bool {
         unsafe {
             let key = CString::new(key).unwrap_or_default();
+            let value = CString::new(value).unwrap_or_default();
             sys::SteamAPI_ISteamFriends_SetRichPresence(
                 self.friends,
                 key.as_ptr() as *const _,
-                value
-                    .and_then(|v| CString::new(v).ok())
-                    .map(|s| s.as_ptr() as *const _)
-                    .unwrap_or(std::ptr::null()),
+                value.as_ptr() as *const _,
             )
         }
     }
