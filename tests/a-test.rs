@@ -1,5 +1,5 @@
 use tokio::sync::{mpsc, oneshot};
-use steamworks::{AppIDs, Client, PublishedFileId, UGCType, UserList, UserListOrder};
+use steamworks::{AppIDs, Client, PublishedFileId, QueryResult, UGCType, UserList, UserListOrder};
 
 
 #[cfg(test)]
@@ -71,18 +71,20 @@ mod tests {
     fn test_query_user() {
         let (client, single) = Client::init().unwrap();
         let accountId=client.user().steam_id().account_id();
-        println!("{:#?}", accountId);
         let appId = client.utils().app_id();
-        let res = client.ugc().query_user(accountId, UserList::Subscribed, UGCType::Items, UserListOrder::CreationOrderAsc, AppIDs::Both {creator:appId,consumer:appId}, 1);
-        let f = match res {
-            Ok(file) => file,
-            Err(error) => panic!("Problem opening the file: {:?}", error),
-        };
-        println!("aaaaaaaaa");
-        f.fetch(|x| match x {
-            Ok(_) => {println!("a")}
-            Err(_) => {println!("b")}
-        })
+        let temp = client.ugc().query_user(accountId, UserList::Subscribed, UGCType::Items, UserListOrder::CreationOrderAsc, AppIDs::Both {creator:appId,consumer:appId}, 1);
+        let userListQuery = temp.unwrap();
+        userListQuery.fetch(|result| {
+            let qs = match result {
+                Ok(t) => Ok(t.iter().map(|x| x.unwrap()).collect::<Vec<QueryResult>>()),
+                Err(e) => Err(e),
+            };
+            println!("{:#?}",qs.unwrap().len())
+        });
+        for _ in 0..100 {
+            single.run_callbacks();
+            ::std::thread::sleep(::std::time::Duration::from_millis(100));
+        }
     }
 
     #[test]
